@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ローカルLLMをRTX 4060Tiで動かす — OH-GY</title>
+<meta name="description" content="8GBのVRAMでどこまでやれるか, 量子化と読み込み方を変えながら測った記録。">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://oh-gy.com/research/local-llm/">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://oh-gy.com/research/local-llm/">
+<meta property="og:title" content="ローカルLLMをRTX 4060Tiで動かす">
+<meta property="og:description" content="8GBのVRAMでどこまでやれるか, 量子化と読み込み方を変えながら測った記録。">
+<meta property="og:image" content="https://oh-gy.com/mon-og.png">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<meta name="theme-color" content="#FFFEF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1917" media="(prefers-color-scheme: dark)">
+
+<link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+<main>
+
+  <a class="back" href="../../">← OH-GY</a>
+
+  <header class="article-head">
+    <h1>ローカルLLMをRTX 4060Tiで動かす</h1>
+    <span class="meta"><time datetime="2026-10-12">2026.10.12</time></span>
+  </header>
+
+  <div class="article-body">
+
+    <!-- ここから書き換える。見出しと段落は好きに足して構いません -->
+
+    <p>ここに, 何をやろうとしているかを2〜3行で書く。読む人が最初に知りたいのは「何を測って, 何がわかったか」なので, 結論を先に置いてもいい。</p>
+
+    <h2>環境</h2>
+
+    <p>使った機材とソフトを書く。あとで自分が読み返すときに一番効く部分。</p>
+
+    <ul>
+      <li>GPU: RTX 4060Ti (VRAM 8GB)</li>
+      <li>OS: Windows</li>
+      <li>推論: ここに使ったものを書く</li>
+    </ul>
+
+    <h2>やったこと</h2>
+
+    <p>手順を書く。コマンドはこう囲む。</p>
+
+<pre><code>ここにコマンドや設定を貼る
+</code></pre>
+
+    <p>文中で短く触れるときは <code>このように</code> 囲む。</p>
+
+    <h2>結果</h2>
+
+    <p>測った数字を置く。表はこう書く。</p>
+
+    <table>
+      <thead>
+        <tr><th>条件</th><th>VRAM</th><th>速度</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 画像は images/ に置いて, このコメントを外して使う
+    <figure>
+      <img src="images/example.png" alt="画像の内容を言葉で説明する">
+      <figcaption>図の説明。</figcaption>
+    </figure>
+    -->
+
+    <p>画像は <code>images/</code> に置いて, 上のコメントを外すと出ます。</p>
+
+    <h2>わかったこと</h2>
+
+    <p>結論と, つまずいた点。うまくいかなかったことも書いておくと後で効く。</p>
+
+    <h2>次にやること</h2>
+
+    <ul>
+      <li>—</li>
+    </ul>
+
+  </div>
+
+</main>
+</body>
+</html>

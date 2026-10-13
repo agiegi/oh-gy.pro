@@ -1,0 +1,416 @@
+/* OH-GY — 共有スタイル */
+
+:root {
+  --ground: #FFFEF8;
+  --ink: #000000;
+  --ink-2: rgba(0, 0, 0, .64);
+  --rule: rgba(0, 0, 0, .26);
+  --wash: rgba(0, 0, 0, .04);
+  --frame: rgba(0, 0, 0, .05);
+  --focus: #1B5FBF;
+
+  --serif: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP",
+           "Noto Serif CJK JP", "Songti SC", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+          "Yu Gothic Medium", "Yu Gothic", YuGothic, "Noto Sans JP",
+          "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
+          "Noto Sans Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #1A1917;
+    --ink: #F2F0EB;
+    --ink-2: rgba(242, 240, 235, .66);
+    --rule: rgba(242, 240, 235, .30);
+    --wash: rgba(242, 240, 235, .055);
+    --frame: rgba(242, 240, 235, .07);
+    --focus: #8FB8F0;
+  }
+}
+
+/* 高コントラスト設定の利用者には, 罫線を 3:1 以上まで上げる */
+@media (prefers-contrast: more) {
+  :root {
+    --ink-2: rgba(0, 0, 0, .82);
+    --rule: rgba(0, 0, 0, .62);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink-2: rgba(242, 240, 235, .88);
+      --rule: rgba(242, 240, 235, .68);
+    }
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.9;
+  font-feature-settings: "palt" 1;
+}
+
+/* 日本語は文節で折り返す。Chrome 119+ が lang="ja" のときだけ効く。
+   非対応ブラウザは通常の折り返しになるだけで, 崩れはしない。 */
+p, h1, h2, h3, dd, li, figcaption { word-break: auto-phrase; }
+
+main {
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .28em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* キーボード利用者が本文へ飛べるようにする */
+.skip {
+  position: absolute;
+  left: -9999px;
+  padding: .75rem 1rem;
+  background: var(--ground);
+  border: 1px solid var(--ink);
+  font-size: .9375rem;
+  text-decoration: none;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+}
+
+/* ---------- 表札 ---------- */
+
+.nameplate {
+  padding: clamp(3.5rem, 13vw, 6.5rem) 0 clamp(2.5rem, 8vw, 4rem);
+  text-align: center;
+}
+
+.mark {
+  margin: 0;
+  line-height: 0;
+}
+
+.mark svg {
+  display: inline-block;
+  width: min(288px, 58vw);
+  height: auto;
+  color: var(--ink);
+}
+
+.reading {
+  margin: 1.75rem 0 0;
+  font-family: var(--serif);
+  font-size: 1rem;
+  letter-spacing: .14em;
+  color: var(--ink-2);
+}
+
+.lede {
+  margin: .85rem auto 0;
+  max-width: 24rem;
+  font-family: var(--serif);
+  font-size: 1.3125rem;
+  line-height: 2;
+}
+
+/* ---------- 節 ---------- */
+/* 罫線は下の見出しに属させたいので, 上の余白より下の余白を広くとる */
+
+.band {
+  padding: clamp(2.25rem, 7vw, 3.25rem) 0 clamp(3.25rem, 10vw, 5rem);
+  border-top: 1px solid var(--rule);
+}
+
+.band > h2 {
+  margin: 0 0 1.5rem;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: .015em;
+}
+
+.band > p { margin: 0 0 1.1rem; }
+
+.band > p:last-child { margin-bottom: 0; }
+
+/* ---------- 一覧の項目 (Work / Research 共通) ---------- */
+
+.entries {
+  display: flex;
+  flex-direction: column;
+}
+
+.entry {
+  display: block;
+  padding: 1.75rem 0;
+  text-decoration: none;
+  border-top: 1px solid var(--rule);
+  transition: background-color .12s ease, box-shadow .12s ease;
+}
+
+.entry:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.entry:hover {
+  background: var(--wash);
+  box-shadow: 0 0 0 1rem var(--wash);
+}
+
+/* 製品の実物。16:10 で枠を確保しておくので, 読み込みで行がずれない (CLS 対策) */
+.shot {
+  display: block;
+  margin: 0 0 1rem;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--frame);
+  border: 1px solid var(--rule);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.entry h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+  transition: text-decoration-color .12s ease;
+}
+
+.entry:hover h3,
+.entry:focus-visible h3 { text-decoration-color: currentColor; }
+
+.entry p {
+  margin: .3rem 0 0;
+  color: var(--ink-2);
+  font-size: .9375rem;
+  line-height: 1.85;
+}
+
+.entry .meta {
+  display: block;
+  margin-top: .5rem;
+  font-size: .8125rem;
+  letter-spacing: .02em;
+  color: var(--ink-2);
+}
+
+/* ---------- 連絡先 ---------- */
+
+.contact {
+  margin: 0;
+  font-size: .9375rem;
+}
+
+.contact > div {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: .75rem;
+  align-items: baseline;
+  border-top: 1px solid var(--rule);
+}
+
+.contact > div:first-child { border-top: 0; }
+
+.contact dt {
+  padding: .7rem 0;
+  color: var(--ink-2);
+}
+
+.contact dd { margin: 0; }
+
+/* 指で押せる大きさを確保する (WCAG 2.2 の 2.5.8 は 24px, ここは 44px) */
+.contact dd a {
+  display: block;
+  padding: .7rem 0;
+  min-height: 44px;
+}
+
+/* ---------- 奥付 ---------- */
+
+footer {
+  padding: clamp(2.75rem, 9vw, 4.25rem) 0 clamp(3.5rem, 11vw, 5.5rem);
+  border-top: 1px solid var(--rule);
+  font-size: .9375rem;
+  color: var(--ink-2);
+}
+
+footer p { margin: 0 0 1rem; }
+
+footer a {
+  display: inline-block;
+  padding: .4rem 0;
+}
+
+.copyright {
+  margin-top: 2rem;
+  font-size: .8125rem;
+  letter-spacing: .04em;
+}
+
+/* ---------- 記事ページ ---------- */
+
+.back {
+  display: inline-block;
+  margin: clamp(2rem, 7vw, 3rem) 0 0;
+  padding: .5rem 0;
+  font-size: .875rem;
+  color: var(--ink-2);
+}
+
+.article-head {
+  padding: 1.5rem 0 clamp(1.75rem, 6vw, 2.5rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.article-head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 5.5vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.article-head .meta {
+  display: block;
+  margin-top: .75rem;
+  font-size: .875rem;
+  letter-spacing: .02em;
+  color: var(--ink-2);
+}
+
+.article-body {
+  padding: clamp(2rem, 7vw, 3rem) 0 clamp(3.5rem, 11vw, 5.5rem);
+}
+
+.article-body > :first-child { margin-top: 0; }
+
+.article-body h2 {
+  margin: 3rem 0 1rem;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.article-body h3 {
+  margin: 2.25rem 0 .75rem;
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.article-body p { margin: 0 0 1.3rem; }
+
+.article-body ul,
+.article-body ol {
+  margin: 0 0 1.3rem;
+  padding-left: 1.4rem;
+}
+
+.article-body li { margin-bottom: .35rem; }
+
+.article-body pre {
+  margin: 0 0 1.4rem;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  background: var(--wash);
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.75;
+}
+
+.article-body code {
+  font-family: var(--mono);
+  font-size: .875em;
+}
+
+.article-body pre code { font-size: inherit; }
+
+.article-body :not(pre) > code {
+  padding: .1em .35em;
+  border-radius: 2px;
+  background: var(--wash);
+}
+
+.article-body figure { margin: 0 0 1.4rem; }
+
+.article-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+}
+
+.article-body figcaption {
+  margin-top: .5rem;
+  font-size: .8125rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.article-body blockquote {
+  margin: 0 0 1.4rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--rule);
+  color: var(--ink-2);
+}
+
+.article-body table {
+  width: 100%;
+  margin: 0 0 1.4rem;
+  border-collapse: collapse;
+  font-size: .9375rem;
+}
+
+.article-body th,
+.article-body td {
+  padding: .55rem .6rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th {
+  font-family: var(--serif);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
