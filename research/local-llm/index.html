@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ローカルLLMをRTX 4060Tiで動かす — OH-GY</title>
-<meta name="description" content="8GBのVRAMでどこまでやれるか, 量子化と読み込み方を変えながら測った記録。">
-<meta name="robots" content="noindex">
+<title>RAGが一度も効いていなかった — OH-GY</title>
+<meta name="description" content="8GBのGPUでローカルLLM + RAG + 音声合成のチャットを作った。動いて見えたが, 測ったら待ち時間も返答の中身も検索も, 想定と違っていた。">
 <link rel="canonical" href="https://oh-gy.com/research/local-llm/">
 
 <meta property="og:type" content="article">
+<meta property="og:site_name" content="OH-GY">
 <meta property="og:url" content="https://oh-gy.com/research/local-llm/">
-<meta property="og:title" content="ローカルLLMをRTX 4060Tiで動かす">
-<meta property="og:description" content="8GBのVRAMでどこまでやれるか, 量子化と読み込み方を変えながら測った記録。">
+<meta property="og:title" content="RAGが一度も効いていなかった">
+<meta property="og:description" content="8GBのGPUでローカルLLMの音声チャットを作って測った記録。">
 <meta property="og:image" content="https://oh-gy.com/mon-og.png">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ohgy_dev">
 
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
@@ -27,70 +28,268 @@
 <body>
 <main>
 
-  <a class="back" href="../../">← OH-GY</a>
+  <a class="back" href="../">← Research</a>
 
   <header class="article-head">
-    <h1>ローカルLLMをRTX 4060Tiで動かす</h1>
-    <span class="meta"><time datetime="2026-10-12">2026.10.12</time></span>
+    <h1>RAGが一度も効いていなかった</h1>
+    <span class="subtitle">自分だけの J.A.R.V.I.S. を作る ── M.I.Y.A.K.I.C.H.I. までの道</span>
+    <span class="meta"><time datetime="2026-10-15">2026.10.15</time></span>
   </header>
 
   <div class="article-body">
 
-    <!-- ここから書き換える。見出しと段落は好きに足して構いません -->
+    <p>手元のRTX 4060Ti (VRAM 8GB) で, ローカルLLMに資料検索と音声合成をつないだチャットを作りました。質問すると, 手元の資料を参照して回答します。</p>
 
-    <p>ここに, 何をやろうとしているかを2〜3行で書く。読む人が最初に知りたいのは「何を測って, 何がわかったか」なので, 結論を先に置いてもいい。</p>
+    <p>ローカルLLMの参考書を購入し, モデルをダウンロードし, 対話するところまでできました。その後この出力をしゃべらせたくなり, VOICEVOX APIを利用して, 喋らせることに成功しました。</p>
 
-    <h2>環境</h2>
+    <p>しかしここで, ある違和感がありました。</p>
 
-    <p>使った機材とソフトを書く。あとで自分が読み返すときに一番効く部分。</p>
+    <p>普通に動いているように見えました。でも計測を入れたら, 想定していたことが3つとも外れていました。</p>
 
     <ul>
-      <li>GPU: RTX 4060Ti (VRAM 8GB)</li>
-      <li>OS: Windows</li>
-      <li>推論: ここに使ったものを書く</li>
+      <li>体感を決めていたのはGPUでも生成速度でもなく, <strong>音声だった</strong></li>
+      <li>返答の中身は<strong>作り話だった</strong></li>
+      <li>資料検索は<strong>一度も発動していなかった</strong></li>
     </ul>
 
-    <h2>やったこと</h2>
+    <p>順に書きます。</p>
 
-    <p>手順を書く。コマンドはこう囲む。</p>
+    <h2>作ったもの</h2>
 
-<pre><code>ここにコマンドや設定を貼る
+    <p>3つを繋いだだけの200行ほどのスクリプトです。</p>
+
+    <ul>
+      <li><strong>Ollama</strong> — <code>Llama-3-ELYZA-JP-8B</code> をローカルで動かす</li>
+      <li><strong>ChromaDB + 埋め込みモデル</strong> — 質問に近い資料を探す</li>
+      <li><strong>VOICEVOX</strong> — 返答を声にする</li>
+    </ul>
+
+    <p>環境は Windows 11 Pro, Python, AMD Ryzen 7 7700, RTX 4060Ti (VRAM 8GB)。</p>
+
+    <h2>8GBをどう分けたか</h2>
+
+    <p>最初に決めたのはここです。3つとも同じGPUを使いたがるので, 8GBをどう配るかを先に決める必要がありました。</p>
+
+    <p><strong>埋め込みモデルはCPUに置きました。</strong> 理由は, VRAMをLLM本体に集中させたかったからです。埋め込みは質問を数値の列に変える処理で, 計算量が小さい。CPUでやっても体感はほとんど変わらないのに, GPUに置くと数百MBを占める。これならば明け渡した方が, LLM側に回せる分が増えます。</p>
+
+    <p>結果, 生成中のVRAM使用量は <strong>5891MB / 8188MB</strong> でした。約2.3GBの余裕が残ります。</p>
+
+    <h2>長文を渡したら, 音声が止まった</h2>
+
+    <p>最初は, 返答が全部できあがってから音声合成に渡していました。短い返答では動きます。でも長文になると失敗して, 何も喋らなくなりました。</p>
+
+    <p>分割して1文ずつ渡すように変えたら直りました。</p>
+
+    <p><strong>原因はまだ特定できていません。</strong> 候補は2つあります。VOICEVOXの合成が設定したタイムアウト (当時10秒) を超えていたか, 本文をURLに載せて送る作りなのでURL長の上限に当たっていたか。エラーの中身を潰してしまっていたので判別できませんでした。今はステータスコードを表示するようにしたので, 次に起きたら分かります。</p>
+
+    <p>分割は結果的に, 直す以上の効果がありました。最初の一文ができた時点で喋り始められるので, 生成の完了を待たなくて済みます。</p>
+
+    <h2>測ったら, 待ち時間は音声で決まっていた</h2>
+
+    <p>1回のやり取りごとに所要時間を記録するようにしました。最初の文字が出るまで, 最初の音が鳴るまで, 生成が終わるまで, 喋り終わるまでの4点です。</p>
+
+    <p>ある返答の記録です。</p>
+
+<pre><code>最初の文字 0.43s / 最初の発話 1.50s / 生成完了 4.27s / 発話完了 69.28s
 </code></pre>
 
-    <p>文中で短く触れるときは <code>このように</code> 囲む。</p>
+    <p><strong>生成は4.27秒で終わっているのに, 聞き終わるのは69.28秒。</strong> 16倍の差があります。</p>
 
-    <h2>結果</h2>
+    <p>条件を変えながら9回測って, 返答の文字数と並べました。</p>
 
-    <p>測った数字を置く。表はこう書く。</p>
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 430" font-family="-apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif" role="img" aria-label="返答の文字数と, 聞き終わるまでの秒数の関係。9回の測定が原点を通る直線にのる。"><line x1="70" y1="376.0" x2="694" y2="376.0" stroke="currentColor" stroke-opacity="0.22" stroke-width="1"/><line x1="70" y1="288.5" x2="694" y2="288.5" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/><line x1="70" y1="201.0" x2="694" y2="201.0" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/><line x1="70" y1="113.5" x2="694" y2="113.5" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/><line x1="70" y1="26.0" x2="694" y2="26.0" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/><line x1="70.0" y1="376.0" x2="694.0" y2="43.8" stroke="currentColor" stroke-opacity="0.38" stroke-width="2" stroke-dasharray="7 5"/><circle cx="395.6" cy="173.9" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="395.6" cy="173.9" r="5" fill="currentColor"/><circle cx="613.4" cy="63.3" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="613.4" cy="63.3" r="5" fill="currentColor"/><circle cx="665.6" cy="72.3" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="665.6" cy="72.3" r="5" fill="currentColor"/><circle cx="121.1" cy="346.9" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="121.1" cy="346.9" r="5" fill="currentColor"/><circle cx="92.7" cy="363.5" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="92.7" cy="363.5" r="5" fill="currentColor"/><circle cx="121.1" cy="347.1" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="121.1" cy="347.1" r="5" fill="currentColor"/><circle cx="108.6" cy="357.9" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="108.6" cy="357.9" r="5" fill="currentColor"/><circle cx="377.5" cy="214.8" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="377.5" cy="214.8" r="5" fill="currentColor"/><circle cx="547.6" cy="149.8" r="7" fill="none" stroke="var(--ground, #FFFEF8)" stroke-width="4"/><circle cx="547.6" cy="149.8" r="5" fill="currentColor"/><text x="140.0" y="369.0" font-size="15" fill="currentColor" fill-opacity="0.68">20字 / 4.3秒</text><text x="667.6" y="102.3" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.68">525字 / 104.1秒</text><text x="70.0" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">0</text><text x="183.5" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">100</text><text x="296.9" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">200</text><text x="410.4" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">300</text><text x="523.8" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">400</text><text x="637.3" y="400" font-size="15" text-anchor="middle" fill="currentColor" fill-opacity="0.6">500</text><text x="58" y="381.0" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">0</text><text x="58" y="293.5" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">30</text><text x="58" y="206.0" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">60</text><text x="58" y="118.5" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">90</text><text x="58" y="31.0" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">120</text><text x="694" y="418" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">返答の文字数</text><text x="58" y="18" font-size="15" text-anchor="end" fill="currentColor" fill-opacity="0.6">秒</text></svg>
+      <figcaption>返答の文字数と, 質問してから聞き終わるまでの秒数。破線は原点を通る直線のあてはめ。</figcaption>
+    </figure>
+
+    <p>一直線に乗りました。あてはめると <strong>秒 = 0.207 × 文字数</strong>, 決定係数は 0.98 です。</p>
 
     <table>
       <thead>
-        <tr><th>条件</th><th>VRAM</th><th>速度</th></tr>
+        <tr><th>条件</th><th>文字数</th><th>発話完了</th><th>秒/字</th></tr>
       </thead>
       <tbody>
-        <tr><td>—</td><td>—</td><td>—</td></tr>
-        <tr><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>語源 1回目</td><td>287</td><td>69.28s</td><td>0.241</td></tr>
+        <tr><td>語源 2回目</td><td>479</td><td>107.22s</td><td>0.224</td></tr>
+        <tr><td>ollama (検索なし)</td><td>525</td><td>104.14s</td><td>0.198</td></tr>
+        <tr><td>条件B / 語源</td><td>45</td><td>9.96s</td><td>0.221</td></tr>
+        <tr><td>条件B / ollama</td><td>20</td><td>4.29s</td><td>0.214</td></tr>
+        <tr><td>条件C / 語源</td><td>45</td><td>9.91s</td><td>0.220</td></tr>
+        <tr><td>条件C / ollama</td><td>34</td><td>6.22s</td><td>0.183</td></tr>
+        <tr><td>e5 / 上位3件</td><td>271</td><td>55.26s</td><td>0.204</td></tr>
+        <tr><td>e5 / 上位1件</td><td>421</td><td>77.54s</td><td>0.184</td></tr>
       </tbody>
     </table>
 
-    <!-- 画像は images/ に置いて, このコメントを外して使う
-    <figure>
-      <img src="images/example.png" alt="画像の内容を言葉で説明する">
-      <figcaption>図の説明。</figcaption>
-    </figure>
-    -->
+    <p>20字から525字まで, 何を変えても同じ傾きに乗ります。1点ごとの秒/字は0.183〜0.241とやや振れますが, 傾向は動きません。</p>
 
-    <p>画像は <code>images/</code> に置いて, 上のコメントを外すと出ます。</p>
+    <p>これが意味するのは, <strong>待ち時間は返答の長さだけで決まる</strong>ということです。音声は実時間でしか進まないので, GPUを速いものに替えても縮みません。縮める方法は, 喋る速さを上げるか, 返答を短くするかの2つだけです。</p>
+
+    <p>8GBの配分を考えていたのに, 体感を支配していたのはVRAMの外でした。</p>
+
+    <h2>返答が作り話だった</h2>
+
+    <p>速度を測るために, 適当な質問を投げていました。その返答がこれです。</p>
+
+    <blockquote>
+      <p>「こんにちは」は日本語の挨拶の言葉ですが、語源は明治時代に作られたとされています。</p>
+      <p>そこで、1885年、内閣の顧問として来日したアメリカ人、アーネスト・サトウが「Good morning」や「Good afternoon」に代わる日本語の挨拶を提案しました。サトウは「こんにちは」を「Good day」に相当する挨拶として提案し、明治政府がこれを採用したとされています。</p>
+    </blockquote>
+
+    <p>全部違います。</p>
+
+    <p>「こんにちは」は「今日はご機嫌いかがですか」「今日はよいお天気で」といった挨拶文の前半だけが独立したもので, 江戸時代には使われています。助詞の「は」で書くのはそのためです。アーネスト・サトウは実在しますが英国人で, 1885年には日本を離れていました。</p>
+
+    <p>同じ質問をもう一度投げたら, <strong>違う嘘が出ました。</strong> 1回目は「政府の日本語簡易化政策で相撲などの言葉が置き換えられた」, 2回目が上のサトウの話です。</p>
+
+    <p>怖いのは, 2回目の方が巧妙だったことです。実在の人物名と西暦が入っている分, 知らなければ疑いません。一度確認して安心できる類の誤りではない, ということです。</p>
+
+    <h2>プロンプトで抑えられるか</h2>
+
+    <p>「わからないことは わからない と答えて」と書けば直るのか, 試しました。資料に<strong>ある</strong>質問 (ollama) と, <strong>ない</strong>質問 (語源) の2つを, 3条件で投げます。temperature は0に固定しました。</p>
+
+    <ul>
+      <li><strong>A</strong> — 何も足さない</li>
+      <li><strong>B</strong> — 「確実でないことは『わかりません』と答えてください」を足す</li>
+      <li><strong>C</strong> — 「資料に書かれていることだけで答えてください」を足す</li>
+    </ul>
+
+    <table>
+      <thead>
+        <tr><th>条件</th><th>語源<br>資料なし</th><th>ollama<br>資料あり</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A<br>なし</td><td>断定して作り話</td><td>作り話</td></tr>
+        <tr><td>B<br>わからないと言え</td><td>断定は消えたが誤りは残る</td><td>「情報は、不明です」</td></tr>
+        <tr><td>C<br>資料だけで答えよ</td><td><strong>「資料に書かれている情報では」と前置きして作り話</strong></td><td>「資料に書かれていないのでわかりません」</td></tr>
+      </tbody>
+    </table>
+
+    <p>条件Bは言い回しが慎重になっただけで, 「明治時代」という誤りはそのまま残りました。</p>
+
+    <p><strong>条件Cは条件Aより悪くなりました。</strong> 資料には一文字も書いていないのに「資料に書かれている情報では」と前置きを付けたからです。嘘に出典が付いて, 検証しにくくなりました。</p>
+
+    <p>そして両方とも, ollamaについては答えなくなっています。<strong>嘘を減らすと, 答えられるはずのことも答えなくなる。</strong></p>
+
+    <h2>資料検索が一度も効いていなかった</h2>
+
+    <p>ここまでやってきて, 気づいたことがありました。知識ベースにはollamaの説明を入れてあります。なのに条件Aで「2019年創設の教育プラットフォーム」という無関係な作り話が返っている。<strong>資料が使われていません。</strong></p>
+
+    <p>そこで検索結果と距離を表示する機能を足して, 確認しました。</p>
+
+<pre><code>[しきい値 0.5]
+  0.737  捨てた  ollamaは,ローカルで動作するAIモデルの管理と実行を…
+  0.854  捨てた  この人工知能は,ユーザーの質問に対して…
+  0.873  捨てた  この人工知能はとても優秀で…
+</code></pre>
+
+    <p>正しい資料はちゃんと1位に来ています。<strong>順位付けは働いていました。</strong> 落ちていたのは足切りの方で, しきい値0.5に対して1位が0.737。全部捨てられて, 資料ゼロのままモデルに渡っていました。</p>
+
+    <p>作った時から一度も発動していなかったことになります。</p>
+
+    <h2>埋め込みモデルが検索用ではなかった</h2>
+
+    <p>この実験を始めるために構築した環境で使っていたのは <code>stsb-xlm-r-multilingual</code> というモデルでした。これは<strong>文同士の類似度を測るモデル</strong>です。「2つの文がどれくらい似た意味か」を判定するために訓練されています。</p>
+
+    <p>やっていたのはそれと違いました。</p>
+
+    <ul>
+      <li>クエリ: 「ollamaについて教えて」— 短い疑問文</li>
+      <li>資料: 「ollamaは,ローカルで動作する…」— 長い説明文</li>
+    </ul>
+
+    <p>内容は合っていても, <strong>文としては似ていません。</strong> 片方は質問, 片方は説明で, 長さも違う。類似度モデルから見れば遠い2文です。</p>
+
+    <p>検索用に訓練されたモデルはこの非対称性を前提にしていて, 質問と答えが近くなるよう学習しています。そこで <code>intfloat/multilingual-e5-small</code> というモデルに替えました。</p>
+
+    <table>
+      <thead>
+        <tr><th>資料</th><th>stsb</th><th>e5</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ollamaの説明 (正解)</td><td>0.737</td><td><strong>0.114</strong></td></tr>
+        <tr><td>この人工知能はとても優秀で</td><td>0.854</td><td>0.211</td></tr>
+        <tr><td>この人工知能は学習を続けることで</td><td>0.873</td><td>0.220</td></tr>
+      </tbody>
+    </table>
+
+    <p>0.737 が 0.114 に。しきい値を触らずに通るようになりました。</p>
+
+    <h2>直したら, 今度は資料を取り違えた</h2>
+
+    <p>ところが, 引く件数を3件に増やしていたので, 今度はこうなりました。</p>
+
+    <blockquote>
+      <p>ollamaは、ローカルで動作するAIモデルの管理と実行を簡単にするツールです。(中略)</p>
+      <p>また、<strong>ollamaは学習を続けることで</strong>、より多くの知識を蓄積し、より複雑な質問にも対応できるようになります。</p>
+    </blockquote>
+
+    <p>ollamaは学習しません。モデルを動かすツールです。</p>
+
+    <p>これは資料3の「<strong>この人工知能は</strong>,学習を続けることで…」を, ollamaの話として語り直したものでした。</p>
+
+    <p>原因は資料の書き方です。「この人工知能」が何を指すのか, どこにも書いていませんでした。<strong>主語が宙に浮いている。</strong> 同じ文脈にollamaの説明と並べられたら, 「この人工知能 = ollama」と解決するのが自然です。</p>
+
+    <p>引く件数を1件に戻したら消えました。資料が4つしかなく, しかも互いに似ている場合, 複数引くのは害にしかなりません。</p>
+
+    <h2>しきい値という方法の弱さ</h2>
+
+    <p>整理すると, 同じ0.5という線が両方向に失敗していました。</p>
+
+    <table>
+      <thead>
+        <tr><th></th><th>1位の距離</th><th>しきい値0.5で</th><th>結果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>stsb</td><td>0.737</td><td>全部落ちる</td><td>資料ゼロ。作り話</td></tr>
+        <tr><td>e5</td><td>0.114</td><td>3位まで通る</td><td>全部入る。取り違え</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>埋め込みモデルを替えると距離の分布が丸ごと動くので, 絶対値で決めた線は意味を失います。</strong></p>
+
+    <p>1位と2位の比で見る方法なら, 両方正しく判断できます。stsbでは 0.737 : 0.854 で比0.86 — ほぼ同点なので決め手なし。e5では 0.114 : 0.211 で比0.54 — 1位が明確に近い。次はこれを試します。</p>
 
     <h2>わかったこと</h2>
 
-    <p>結論と, つまずいた点。うまくいかなかったことも書いておくと後で効く。</p>
+    <ul>
+      <li><strong>音声を入れると, 待ち時間は文字数で決まる。</strong> 0.207秒/字。GPUでは縮まない</li>
+      <li><strong>8Bのモデルは堂々と嘘をつき, 毎回違う嘘をつく。</strong> 実在の人名と年号を混ぜてくる</li>
+      <li><strong>プロンプトでは抑えられない。</strong> 「資料だけで答えて」はむしろ嘘に出典を付けて悪化させた</li>
+      <li><strong>埋め込みモデルは用途で選ぶ。</strong> 文類似度用と検索用は別物</li>
+      <li><strong>資料には主語を書く。</strong> 「この」で始まる文は, 並べられると主語が入れ替わる</li>
+      <li><strong>動いて見えることと, 動いていることは違う。</strong> 距離を表示するまで, 検索が空振りしていることに気づけなかった</li>
+    </ul>
+
+    <h2>測っていないこと</h2>
+
+    <p>正直に残しておきます。</p>
+
+    <ul>
+      <li>何も起動していない状態のVRAM。5891MBが多いのか少ないのか, 比較できていない</li>
+      <li>埋め込みをGPUに置いた場合との差。CPUに逃がして何MB空いたかは未測定</li>
+      <li>各条件1回ずつしか測っていない。temperature は0に固定したが, 再現性は確認していない</li>
+      <li>途中でしきい値を0.5から0.8に変えた回がある。埋め込みモデルと同時に動かしたので, その回は切り分けになっていない</li>
+    </ul>
 
     <h2>次にやること</h2>
 
     <ul>
-      <li>—</li>
+      <li>しきい値をやめて, 1位と2位の比で判断する</li>
+      <li>資料に主語を入れて書き直す。振る舞いの指示は検索対象から外して system に移す</li>
+      <li>VOICEVOXの <code>speedScale</code> を上げる。0.207秒/字が2割縮めば, 400字の返答で15秒変わる</li>
+      <li>喋っている途中で次の質問を打てるようにする</li>
     </ul>
+
+    <h2>何を作ろうとしているか</h2>
+
+    <p>副題の通りです。</p>
+
+    <p>家のデスクトップを本体にして, 外にいてもVPNで繋ぐ。耳につけたカメラとマイクとイヤホンを通して, こちらの言うことを聞いて答える。外に出ない閉じた網の中で完結させる。</p>
+
+    <p>今回測った0.207秒/字は, そのまま設計の制約になります。400字の返答は聞き終わるのに83秒かかる。歩きながら83秒の独り言を聞かされる道具は使えません。<strong>短く答えることは, 好みではなく要件です。</strong></p>
+
+    <p>まだ何も作っていません。今はその手前で, 動いているように見えるものを一つずつ測っているところです。</p>
 
   </div>
 

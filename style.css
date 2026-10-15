@@ -304,6 +304,15 @@ footer a {
   line-height: 1.55;
 }
 
+.article-head .subtitle {
+  display: block;
+  margin-top: .85rem;
+  font-family: var(--serif);
+  font-size: clamp(1rem, 3.4vw, 1.125rem);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
 .article-head .meta {
   display: block;
   margin-top: .75rem;
@@ -409,6 +418,28 @@ footer a {
 .article-body th {
   font-family: var(--serif);
   font-weight: 600;
+}
+
+/* ---------- 記録の一覧ページ ---------- */
+
+.archive {
+  padding: clamp(2rem, 7vw, 3rem) 0 clamp(3.5rem, 11vw, 5.5rem);
+}
+
+/* 一覧へ渡す控えめなリンク (トップの節の末尾に置く) */
+.more {
+  display: inline-block;
+  margin-top: 1.75rem;
+  padding: .45rem 0;
+  font-size: .9375rem;
+  color: var(--ink-2);
+}
+
+/* 狭い画面では表の字を少し詰める (列が多いと潰れるため) */
+@media (max-width: 30rem) {
+  .article-body table { font-size: .875rem; }
+  .article-body th,
+  .article-body td { padding: .5rem .4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
