@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://oh-gy.com/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-26</lastmod>
   </url>
   <url>
     <loc>https://oh-gy.com/research/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-26</lastmod>
+  </url>
+  <url>
+    <loc>https://oh-gy.com/research/wake-word/</loc>
+    <lastmod>2026-10-26</lastmod>
   </url>
   <url>
     <loc>https://oh-gy.com/research/local-llm/</loc>
