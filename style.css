@@ -400,6 +400,18 @@ footer a {
   color: var(--ink-2);
 }
 
+/* 訂正や取り下げの注記。見落とされては困るので, 引用のように薄くはしない。
+   記事の冒頭に置く前提だが, 本文の途中でも使える。
+   .article-body p より詳細度を上げておく必要がある (余白が効かなくなる) */
+.article-body .note {
+  margin: 0 0 1.8rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--rule);
+  background: var(--wash);
+  font-size: .9375rem;
+  line-height: 1.8;
+}
+
 .article-body table {
   width: 100%;
   margin: 0 0 1.4rem;

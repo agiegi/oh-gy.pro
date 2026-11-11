@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://oh-gy.com/</loc>
-    <lastmod>2026-11-03</lastmod>
-  </url>
-  <url>
-    <loc>https://oh-gy.com/research/</loc>
-    <lastmod>2026-11-03</lastmod>
-  </url>
-  <url>
-    <loc>https://oh-gy.com/research/threshold/</loc>
     <lastmod>2026-11-10</lastmod>
   </url>
   <url>
+    <loc>https://oh-gy.com/research/</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://oh-gy.com/research/threshold/</loc>
+    <lastmod>2026-11-11</lastmod>
+  </url>
+  <url>
     <loc>https://oh-gy.com/research/speech-timing/</loc>
-    <lastmod>2026-11-03</lastmod>
+    <lastmod>2026-11-11</lastmod>
   </url>
   <url>
     <loc>https://oh-gy.com/research/wake-word/</loc>
@@ -22,6 +22,6 @@
   </url>
   <url>
     <loc>https://oh-gy.com/research/local-llm/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-11-11</lastmod>
   </url>
 </urlset>
